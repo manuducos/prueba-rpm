@@ -9,6 +9,11 @@ volatile int counterPrev, counter = 0; //This variable will increase or decrease
 
 #define pulsesPerRevolution 600  // pulsos del encoder. 
 
+#define potFast 50
+#define potSlow 500
+
+int interval = 1000;
+int previousMillis;
 
 void setup() {
     Serial.begin(9600);
@@ -24,13 +29,28 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(encoderA), ai0, RISING);
     //B rising pulse from encodenren activated ai1().
     attachInterrupt(digitalPinToInterrupt(encoderB), ai1, RISING);
+    previousMillis = millis();
 }
 
 void loop() {
+    if (counter != counterPrev) {
+        Serial.println(counter);
+        counterPrev = counter;
+    }
+
+    int currentMillis = millis();
+    if (currentMillis - previousMillis > interval) {
+        previousMillis = currentMillis;
+    }
+
+    float rpm = (counter * 60.0 / pulsesPerRevolution);
+
     int potReading = analogRead(potAnalogPin);
     int runSpeed = map(potReading, 0, 1023, 50, 500); 
     
     move_motorRun(runSpeed, HIGH, '5');
+
+    counter = 0;
 }
 
 void move_motorRun(int velocidad, boolean dir, char Page)  // page = 5 for run mode
