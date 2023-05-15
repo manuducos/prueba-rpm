@@ -47,6 +47,11 @@ void loop() {
 
     int potReading = analogRead(potAnalogPin);
     int runSpeed = map(potReading, 0, 1023, 50, 500); 
+
+    if (rpm > 0) {
+        Serial.print(rpm);
+        Serial.println(" RPM");
+    }
     
     move_motorRun(runSpeed, HIGH, '5');
 
