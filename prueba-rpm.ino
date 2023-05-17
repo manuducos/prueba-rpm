@@ -12,6 +12,11 @@ volatile int counterPrev, counter = 0; //This variable will increase or decrease
 #define potFast 50
 #define potSlow 500
 
+volatile int ISRCounter = 0;
+unsigned int pulsos = 0;
+unsigned long Time = 0; 
+unsigned int RPM = 0;
+
 void setup() {
     Serial.begin(9600);
 
@@ -26,15 +31,30 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(encoderA), ai0, RISING);
     //B rising pulse from encodenren activated ai1().
     attachInterrupt(digitalPinToInterrupt(encoderB), ai1, RISING);
+
+    Time = millis();
 }
 
 void loop() {
-
-    int potReading = analogRead(potAnalogPin);
-    int runSpeed = map(potReading, 0, 1023, 50, 500); 
+  if(millis() - Time >= 1000) {
+    pulsos = ISRCounter;
+    RPM = 60 * pulsos / (pulsesPerRevolution * 2);
     
-    move_motorRun(runSpeed, HIGH, '5');
+    Serial.print("Pulsos por segundo:");
+    Serial.println(pulsos);
 
+    Serial.print("Revoluciones por minuto:");
+    Serial.println(RPM);
+    //se reestablecen los valores
+    ISRCounter = 0;
+    pulsos = 0;
+    Time = millis();
+  }
+
+  int potReading = analogRead(potAnalogPin);
+  int runSpeed = map(potReading, 0, 1023, 50, 500); 
+  
+  move_motorRun(runSpeed, HIGH, '5');
 }
 
 void move_motorRun(int velocidad, boolean dir, char Page)  // page = 5 for run mode
@@ -60,6 +80,7 @@ void ai0() {
   } else {
     counter--;
   }
+  ISRCounter++; // RPM
 }
    
 
@@ -71,4 +92,5 @@ void ai1() {
   } else {
     counter++;
   }
+  ISRCounter++; // RPM
 }
